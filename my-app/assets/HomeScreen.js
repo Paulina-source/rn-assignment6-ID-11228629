@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, FlatList, Image, TouchableOpacity, Text } from 'react-native';
+import React, { useState } from 'react';
+import { View, FlatList, Image, TouchableOpacity, Text , StyleSheet, Animated} from 'react-native';
 import { Dimensions } from 'react-native';
+import { useRef,useEffect } from 'react';
 
 const { width } = Dimensions.get('window');
 const SPACING = 5;
@@ -30,27 +31,152 @@ const products = [
   
 ];
 
-const HomeScreen = ({ handleAddToCart }) => {
+const HomeScreen = ({ handleAddToCart, navigation }) => {
+  const [searchQuery, setSearchQuery]= useState('');
+  const[filteredProducts, setFilteredProducts]= useState(products);
+  const handleSearch =(query)=>{
+    setSearchQuery(query);
+    const filtered= products.filter((products) =>{
+      const productName=products.name1.toLowerCase()+''+products.name2.toLowerCase();
+      return productName.includes(query.toLowerCase());
+    });
+    setFilteredProducts(filtered);
+  };
+
+  const handleMenuPress = () => {
+    navigation.navigate('MenuScreen');
+  };
+
+  const handleShoppingBagPress = () => {
+    navigation.navigate('CartScreen');
+  };
+  
+ 
   return (
     <View>
-      <FlatList
-        data={products}
-        renderItem={({ item }) => (
-          <View style={{ width: width / 2 - SPACING, margin: SPACING }}>
-            <Image source={item.image} style={{ width: 170, height: 250 }} />
-            <Text>{item.name1}</Text>
-            <Text>{item.name2}</Text>
-            <Text>${item.price}</Text>
-            <TouchableOpacity onPress={() => handleAddToCart(item)}>
-              <Image source={require('../assets/add_circle.png')} style={{ width: 20, height: 20 }} />
-            </TouchableOpacity>
-          </View>
-        )}
-        numColumns={2}
-      />
+      <View style={styles.header}>
+        <Image source={require('../assets/Menu.png')} style={styles.headerImage} />
+        <Image source={require('../assets/Logo.png')} style={[styles.headerImage, { marginLeft: width / 4.5 - 40 }]} />
+        <View style={{ flexDirection: 'row' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('SearchScreen', { handleSearch })}>
+            <Image source={require('../assets/Search.png')} style={styles.search} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('CartScreen',{handleShoppingBagPress})}>
+            <Image source={require('../assets/shoppingBag.png')} style={styles.shoppingbag} />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.subheader}>
+      <Text style={styles.text}>OUR STORY</Text>
+        <View style={{ flexDirection: 'row' , justifyContent:'flex-end', alignItems:'center'}}>
+        <Image source={require('../assets/Listview.png')} style={styles.listview
+          } /> 
+          <Image source={require('../assets/Filter.png')} style={styles.filter} />
+        <View>
+        </View>
+        </View>
+       
+        <FlatList
+  data={filteredProducts}
+  renderItem={({ item }) => (
+    <View style={{ width: width / 2 - SPACING, margin: SPACING , }}>
+      <View style={{ position: 'elative' }}>
+        <Image
+          source={item.image}
+          style={{
+            width: 180, 
+            height: 250,
+           
+          }}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 10,
+            right: 10,
+          }}
+        >
+          <TouchableOpacity onPress={() => handleAddToCart(item)}>
+            <Image
+              source={require('../assets/add_circle.png')}
+              style={{
+                width: 20,
+                height: 20,
+              }}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View>
+        <Text style={styles.name1}>{item.name1}</Text>
+        <Text style={styles.name2}>{item.name2}</Text>
+        <Text style={styles.price}>${item.price}</Text>
+      </View>
     </View>
-  );
-};
+  )}
+  numColumns={2}
+/>
+      </View>
+      </View>
+      
+      )}
+  
+  
+
+
+
+const styles =StyleSheet.create({
+  header:{
+    flexDirection:'row',
+    justifyContent:'space-between',
+    alignItems:'center',
+    padding: 10,
+  },
+  search:{
+    marginRight: 20
+  },
+  shoppingbag:{
+    marginRight: 10,
+    
+  },
+  subheader:{
+    justifyContent:'space-between',
+    alignItems:'stretch',
+    
+  },
+
+  listview:{
+    marginRight:20,
+    height:20,
+    width:20
+  },
+
+  filter:{
+    marginRight:10,
+    height:30,
+    width:20
+    
+  },
+  text:{
+    paddingTop:10,
+    fontSize:20,
+    fontFamily:'Serif'
+   
+
+  },
+  name1:{
+    fontSize: 16,
+    fontWeight:'bold'
+  },
+  name2:{
+    color:'grey'
+  },
+  price:{
+    color:'#dc6601',
+    
+    
+  }
+})
 
 export default HomeScreen;
 
