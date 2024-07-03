@@ -1,129 +1,153 @@
-import React, { useState } from 'react';
-import { View, FlatList, Image, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-const CartScreen = (navigation, handleAddToCart) => {
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Header from '../assets/header';
+
+
+const removeIcon = require('../assets/remove.png');
+
+const CartScreen = () => {
   const [cartItems, setCartItems] = useState([]);
-  const [totalPrice, setTotalPrice] = useState(0);
+  const [total, setTotal] = useState(0);
 
-  const handleAddToCart = (item) => {
-    setCartItems([...cartItems, item]);
-    setTotalPrice(totalPrice + item.price);
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      let cart = await AsyncStorage.getItem('cart');
+      cart = cart ? JSON.parse(cart) : [];
+      setCartItems(cart);
+      calculateTotal(cart);
+    };
+
+    fetchCartItems();
+  }, []);
+
+  const calculateTotal = (cart) => {
+    let total = cart.reduce((sum, item) => sum + parseFloat(item.price.substring(1)), 0);
+    setTotal(total.toFixed(2));
   };
 
-  const handleRemoveFromCart = (item) => {
-    setCartItems(cartItems.filter((i) => i.id!== item.id));
-    setTotalPrice(totalPrice - item.price);
+  const removeFromCart = async (id) => {
+    let cart = await AsyncStorage.getItem('cart');
+    cart = cart ? JSON.parse(cart) : [];
+    cart = cart.filter(item => item.id !== id);
+    await AsyncStorage.setItem('cart', JSON.stringify(cart));
+    setCartItems(cart);
+    calculateTotal(cart);
   };
 
   return (
-    <View>
-      <View style={styles.header}>
-        <Image source={require('../assets/Logo.png')} style={styles.headerImage} />
-        <TouchableOpacity>
-          <Image source={require('../assets/Search.png')} style={styles.search} />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.subheader}>
-        <Text style={styles.subheaderText}>Checkout</Text>
-        <View style={styles.subheaderLine}>
-          <View style={styles.diamond} />
-        </View>
-      </View>
+    <View style={styles.container}>
+      <Header />
+      <Text style={styles.header}>CHECKOUT</Text>
       <FlatList
         data={cartItems}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.cartItem}>
-            <Image source={item.image} style={styles.cartItemImage} />
-            <View style={styles.cartItemInfo}>
-              <Text style={styles.cartItemName1}>{item.name1}</Text>
-              <Text style={styles.cartItemName2}>{item.name2}</Text>
-              <Text style={styles.cartItemPrice}>${item.price}</Text>
+          <View style={styles.product}>
+            <Image source={item.image} style={styles.image} />
+            <View style={styles.details}>
+              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.description}>{item.description}</Text>
+              <Text style={styles.price}>{item.price}</Text>
             </View>
-            <TouchableOpacity onPress={() => handleRemoveFromCart(item)}>
-              <Image source={require('../assets/remove.png')} style={styles.removeImage} />
+            <TouchableOpacity onPress={() => removeFromCart(item.id)} style={styles.removeButton}>
+              <Image source={removeIcon} style={styles.removeButtonImage} />
             </TouchableOpacity>
           </View>
         )}
       />
-      <View style={styles.totalContainer}>
-        <Text style={styles.totalText}>Total: ${totalPrice}</Text>
+      <View style={styles.footer}>
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalText}>EST. TOTAL</Text>
+          <Text style={styles.totalPrice}>${total}</Text>
+        </View>
+        <TouchableOpacity style={styles.checkoutButton}>
+          <Text style={styles.checkoutButtonText}>CHECKOUT</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#fff',
+  },
   header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  product: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
+    marginBottom: 16,
   },
-  headerImage: {
-    width: 30,
-    height: 30,
+  image: {
+    width: 100,
+    height: 150,
+    resizeMode: 'contain',
   },
-  search: {
-    marginRight: 10,
+  details: {
+    flex: 1,
+    marginLeft: 16,
   },
-  subheader: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  subheaderText: {
+  name: {
     fontSize: 18,
     fontWeight: 'bold',
   },
-  subheaderLine: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
+  description: {
+    fontSize: 14,
+    color: '#888',
   },
-  diamond: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#ccc',
-    transform: [{ rotate: '45deg' }],
-  },
-  cartItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  cartItemImage: {
-    width: 50,
-    height: 50,
-  },
-  cartItemInfo: {
-    flex: 1,
-    paddingHorizontal: 10,
-  },
-  cartItemName1: {
+  price: {
     fontSize: 16,
     fontWeight: 'bold',
+    marginTop: 8,
   },
-  cartItemName2: {
-    fontSize: 14,
-    color: 'grey',
+  removeButton: {
+    padding: 8,
   },
-  cartItemPrice: {
-    fontSize: 16,
-    color: '#dc6601',
+  removeButtonImage: {
+    width: 24,
+    height: 24,
   },
-  removeImage: {
-    width: 20,
-    height: 20,
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    padding: 16,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderColor: '#ccc',
   },
   totalContainer: {
-    padding: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   totalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  totalPrice: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#E98D02',
+  },
+  checkoutButton: {
+    backgroundColor: '#000',
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  checkoutButtonText: {
+    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },

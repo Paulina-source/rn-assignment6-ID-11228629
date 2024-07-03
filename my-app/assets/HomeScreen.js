@@ -1,219 +1,135 @@
-import React, { useState } from 'react';
-import { View, FlatList, Image, TouchableOpacity, Text , StyleSheet, Animated} from 'react-native';
-import { Dimensions } from 'react-native';
-import { useRef,useEffect } from 'react';
 
-const { width } = Dimensions.get('window');
-const SPACING = 5;
+import React from 'react';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Header from '../assets/header';
 
-const IMAGES = {
-  image1: require('../assets/dress1.png'),
-  image2: require('../assets/dress2.png'),
-  image3: require('../assets/dress3.png'),
-  image4: require('../assets/dress4.png'),
-  image5: require('../assets/dress5.png'),
-  image6: require('../assets/dress6.png'),
-  image7: require('../assets/dress7.png'),
-  image8: require('../assets/dress3.png'),
-  
-  
-};
+const gridIcon = require('../assets/Listview.png');
+const filterIcon = require('../assets/Filter.png');
 
 const products = [
-  { id: '1', image: IMAGES.image1, name1: 'Office Wear', name2:'reversible angora cardigan', price: 120 },
-  { id: '2', image: IMAGES.image2, name1: 'Black', name2:'reversible angora cardigan', price: 120 },
-  { id: '3', image: IMAGES.image3, name1: 'Church Wear', name2:'reversible angora cardigan', price: 120 },
-  { id: '4', image: IMAGES.image4, name1: 'Lamerei', name2:'reversible angora cardigan', price: 120 },
-  { id: '5', image: IMAGES.image5, name1: '21WN', name2:'reversible angora cardigan', price: 120 },
-  { id: '6', image: IMAGES.image6, name1: 'Lopo',  name2:'reversible angora cardigan',price: 120 },
-  { id: '7', image: IMAGES.image7, name1: 'l21WN',  name2:'reversible angora cardigan',price: 120 },
-  { id: '8', image: IMAGES.image3, name1: 'lame', name2:'reversible angora cardigan', price: 120 },
-  
+  { id: '1', name: 'Office Wear', description: 'reversible angora cardigan', price: '$120', image: require('../assets/dress1.png') },
+  { id: '2', name: 'Black', description: 'reversible angora cardigan', price: '$120', image: require('../assets/dress2.png') },
+  { id: '3', name: 'Church Wear', description: 'reversible angora cardigan', price: '$120', image: require('../assets/dress3.png') },
+  { id: '4', name: 'Lamerei', description: 'reversible angora cardigan', price: '$120', image: require('../assets/dress4.png') },
+  { id: '5', name: '21WN', description: 'reversible angora cardigan', price: '$120', image: require('../assets/dress5.png') },
+  { id: '6', name: 'Lopo', description: 'reversible angora cardigan', price: '$120', image: require('../assets/dress6.png') },
+  { id: '7', name: 'LopoReverse', description: 'reversible angora cardigan', price: '$120', image: require('../assets/dress7.png') },
+  { id: '8', name: 'Lame', description: 'reversible angora cardigan', price: '$120', image: require('../assets/dress3.png') },
 ];
 
-const HomeScreen = ({ handleAddToCart, navigation }) => {
-  const [searchQuery, setSearchQuery]= useState('');
-  const[filteredProducts, setFilteredProducts]= useState(products);
-  const handleSearch =(query)=>{
-    setSearchQuery(query);
-    const filtered= products.filter((products) =>{
-      const productName=products.name1.toLowerCase()+''+products.name2.toLowerCase();
-      return productName.includes(query.toLowerCase());
-    });
-    setFilteredProducts(filtered);
+const addCircleImage = require('../assets/add_circle.png');
+
+const HomeScreen = ({ navigation }) => {
+  const addToCart = async (product) => {
+    let cart = await AsyncStorage.getItem('cart');
+    cart = cart ? JSON.parse(cart) : [];
+    cart.push(product);
+    await AsyncStorage.setItem('cart', JSON.stringify(cart));
   };
 
-  const handleMenuPress = () => {
-    navigation.navigate('MenuScreen');
-  };
-
-  const handleShoppingBagPress = () => {
-    navigation.navigate('CartScreen');
-  };
-  
- 
   return (
-    <View>
-      <View style={styles.header}>
-        <Image source={require('../assets/Menu.png')} style={styles.headerImage} />
-        <Image source={require('../assets/Logo.png')} style={[styles.headerImage, { marginLeft: width / 4.5 - 40 }]} />
-        <View style={{ flexDirection: 'row' }}>
-        <TouchableOpacity onPress={() => navigation.navigate('SearchScreen', { handleSearch })}>
-            <Image source={require('../assets/Search.png')} style={styles.search} />
+    <ScrollView style={styles.container}>
+      <Header navigation={navigation} />
+      <View style={styles.headerContainer}>
+        <Text style={styles.ourStoryTitle}>Our Story</Text>
+        <View style={styles.iconsContainer}>
+          <TouchableOpacity>
+            <Image source={gridIcon} style={styles.icon} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('CartScreen',{handleShoppingBagPress})}>
-            <Image source={require('../assets/shoppingBag.png')} style={styles.shoppingbag} />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.subheader}>
-      <Text style={styles.text}>OUR STORY</Text>
-        <View style={{ flexDirection: 'row' , justifyContent:'flex-end', alignItems:'center'}}>
-        <Image source={require('../assets/Listview.png')} style={styles.listview
-          } /> 
-          <Image source={require('../assets/Filter.png')} style={styles.filter} />
-        <View>
-        </View>
-        </View>
-       
-        <FlatList
-  data={filteredProducts}
-  renderItem={({ item }) => (
-    <View style={{ width: width / 2 - SPACING, margin: SPACING , }}>
-      <View style={{ position: 'elative' }}>
-        <Image
-          source={item.image}
-          style={{
-            width: 180, 
-            height: 250,
-           
-          }}
-        />
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 10,
-            right: 10,
-          }}
-        >
-          <TouchableOpacity onPress={() => handleAddToCart(item)}>
-            <Image
-              source={require('../assets/add_circle.png')}
-              style={{
-                width: 20,
-                height: 20,
-              }}
-            />
+          <TouchableOpacity>
+            <Image source={filterIcon} style={styles.icon} />
           </TouchableOpacity>
         </View>
       </View>
-      <View>
-        <Text style={styles.name1}>{item.name1}</Text>
-        <Text style={styles.name2}>{item.name2}</Text>
-        <Text style={styles.price}>${item.price}</Text>
-      </View>
-    </View>
-  )}
-  numColumns={2}
-/>
-      </View>
-      </View>
-      
-      )}
-  
-  
+      <FlatList
+        data={products}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        renderItem={({ item }) => (
+          <View style={styles.product}>
+            <Image source={item.image} style={styles.image} />
+            <View style={styles.details}>
+              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.description}>{item.description}</Text>
+              <Text style={styles.price}>{item.price}</Text>
+            </View>
+            <TouchableOpacity onPress={() => addToCart(item)} style={styles.addButton}>
+              <Image source={addCircleImage} style={styles.addButtonImage} />
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+    </ScrollView>
+  );
+};
 
-
-
-const styles =StyleSheet.create({
-  header:{
-    flexDirection:'row',
-    justifyContent:'space-between',
-    alignItems:'center',
-    padding: 10,
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#fff',
   },
-  search:{
-    marginRight: 20
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 16,
   },
-  shoppingbag:{
-    marginRight: 10,
-    
+  ourStoryTitle: {
+    fontSize: 24,
   },
-  subheader:{
-    justifyContent:'space-between',
-    alignItems:'stretch',
-    
+  iconsContainer: {
+    flexDirection: 'row',
   },
-
-  listview:{
-    marginRight:20,
-    height:20,
-    width:20
+  icon: {
+    width: 24,
+    height: 24,
+    marginLeft: 16,
   },
-
-  filter:{
-    marginRight:10,
-    height:30,
-    width:20
-    
+  product: {
+    flex: 1,
+    margin: 8,
+    padding: 1,
+    borderRadius: 8,
+    backgroundColor: '#fff',
   },
-  text:{
-    paddingTop:10,
-    fontSize:20,
-    fontFamily:'Serif'
-   
-
+  image: {
+    width: '100%',
+    height: 250,
+    marginBottom: 8,
   },
-  name1:{
+  details: {
+    marginBottom: 20,
+  },
+  name: {
     fontSize: 16,
-    fontWeight:'bold'
+    fontWeight: 'bold',
   },
-  name2:{
-    color:'grey'
+  description: {
+    fontSize: 14,
+    color: '#888',
   },
-  price:{
-    color:'#dc6601',
-    
-    
-  }
-})
+  price: {
+    fontSize: 20,
+    fontFamily: 'cursive',
+    fontWeight: 'bold',
+    color: '#E98D02',
+    marginVertical: 8,
+  },
+  addButton: {
+    position: 'absolute',
+    right: 8,
+    bottom: 8,
+    width: 20,
+    height: 270,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButtonImage: {
+    width: 30,
+    height: 30,
+  },
+});
 
 export default HomeScreen;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
